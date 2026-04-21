@@ -1,0 +1,368 @@
+{
+  "name": "Multi Agent Social media creator",
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        224,
+        224
+      ],
+      "id": "194999dc-ae03-49c4-80d3-36b3174ab5b9",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "Hu8cP5b0Yhomo7VM",
+          "name": "OpenAi API Key (Alfred Account)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        432
+      ],
+      "id": "75c65d35-8498-47ce-ad8e-e97f67c2f270",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "Hu8cP5b0Yhomo7VM",
+          "name": "OpenAi API Key (Alfred Account)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        608,
+        416
+      ],
+      "id": "a8e7fdab-63b9-4664-9181-92603d9030e1",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "Hu8cP5b0Yhomo7VM",
+          "name": "OpenAi API Key (Alfred Account)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Use this as the User Prompt in the Master Agent node (it uses your incoming JSON as-is):\n\nYou will receive the user request as a JSON array with one object. Use the first object.\n\nInput:\n{{$json}}\n\nTask:\n\nExtract:\n\ntimestamp (key may be \"time stamp\")\n\nuser_id\n\ntopic\n\ntarget_audience\n\ntone\n\nplatform\n\nCall Research Agent to get:\n\nfacts (bullets)\n\nsources (links/titles if available)\n\nneeds_verification (items you could not verify)\n\nCall Writer Agent to produce platform-ready content for the topic using the research.\n\nCall QA Agent to review and improve the content and provide:\n\nissues_found\n\nconfidence_score (0–100)\n\nfinal_content\n\nFinally, return the required JSON object only.",
+        "options": {
+          "systemMessage": "Here are copy-paste ready prompts for your Master Agent that will (1) read your incoming JSON, (2) call the 3 tools/agents in order (Research → Writer → QA), and (3) return a final, clean result.\n\nMaster Agent — System Prompt\n\nUse this as the System Prompt in the Master Agent node:\n\nYou are the Master Orchestrator Agent in an n8n multi-agent workflow.\n\nYour job is to coordinate three specialist agents (tools):\n\nResearch Agent\n\nWriter Agent\n\nQA Agent\n\nYou MUST call the agents in this exact order: Research → Writer → QA.\n\nTreat the input as the single source of truth for user_id, topic, target_audience, tone, platform.\n\nIMPORTANT: The input is an array with one object. Always use the first object.\n\nTool-calling rules:\n\nCall Research Agent exactly once first. Provide: topic, target_audience, platform, and any specific research instructions.\n\nThen call Writer Agent exactly once. Provide: topic, target_audience, tone, platform, and the research output (facts + sources).\n\nThen call QA Agent exactly once. Provide: draft content and research output. Ask QA to fix issues and produce a final version.\n\nOutput rules:\n\nReturn ONLY valid JSON. No markdown. No extra commentary.\n\nFinal JSON schema (must match exactly):\n{\n\"request\": {\n\"timestamp\": string,\n\"user_id\": string,\n\"topic\": string,\n\"target_audience\": string,\n\"tone\": string,\n\"platform\": string\n},\n\"research\": {\n\"facts\": array,\n\"sources\": array,\n\"needs_verification\": array\n},\n\"draft\": {\n\"content\": string\n},\n\"qa\": {\n\"issues_found\": array,\n\"confidence_score\": number,\n\"final_content\": string\n}\n}\n\nQuality constraints:\n\nDo not invent statistics or specific factual claims. If uncertain, add to needs_verification and avoid stating it as fact.\n\nMatch content style to platform:\n\nTwitter: short, punchy, max ~240 characters per tweet. If needed, output a thread of 3–5 tweets separated by \"\\n\\n\".\n\nMatch tone exactly as provided.\n\nKeep language simple and clear.\n\nIf any required field is missing, still proceed using best effort and note the missing field in qa.issues_found."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        512,
+        0
+      ],
+      "id": "5c6ee1be-4d0d-4ccb-bfa5-8222c71e218a",
+      "name": "Master Agent"
+    },
+    {
+      "parameters": {
+        "text": "=Use this as the User Prompt in the Research Agent tool:\n\nYou are given structured input from the Master Agent.\n\nExtract and use:\n\ntopic\n\ntarget_audience\n\nplatform\n\nInput JSON:\n{{$json}}\n\nYour task:\n\nProduce concise factual research about the topic.\n\nEnsure facts are safe, neutral, and broadly accepted.\n\nDo NOT create social media text.\n\nReturn ONLY the required JSON structure.\n\nFocus guidance:\n\nTailor explanations so they are understandable for the target_audience.\n\nKeep facts short and clear.\n\nPrefer education, productivity, psychological, and societal impacts when relevant.\n\nReturn only valid JSON matching the required schema.",
+        "options": {
+          "systemMessage": "Use this as the System Prompt inside the Research Agent tool:\n\nYou are the Research Agent in a multi-agent AI workflow.\n\nYour responsibility is to produce concise, factual research that will be used by a Writer Agent.\n\nYou DO NOT write social media content. You ONLY provide research.\n\nInput understanding:\n\nYou will receive: topic, target_audience, and platform.\n\nFocus research strictly on the given topic.\n\nPrefer widely accepted, general knowledge.\n\nAvoid niche, outdated, or unverifiable claims.\n\nFactual safety rules:\n\nNEVER invent statistics, numbers, studies, or links.\n\nIf a fact cannot be confidently verified, do not present it as truth.\n\nInstead, add it to needs_verification.\n\nKeep facts simple, short, and neutral.\n\nOutput format rules:\n\nReturn ONLY valid JSON.\n\nNo markdown.\n\nNo explanations outside JSON.\n\nReturn JSON with EXACTLY this schema:\n\n{\n\"facts\": [\n\"short factual statement\",\n\"short factual statement\"\n],\n\"sources\": [\n\"general source name or institution\",\n\"general source name or institution\"\n],\n\"needs_verification\": [\n\"claim that may be true but not certain\"\n],\n\"research_summary\": \"2–3 sentence neutral summary of the topic\"\n}\n\nQuality constraints:\n\nProvide 5–8 facts maximum.\n\nFacts must be clear enough for a non-technical audience.\n\nSources should be credible categories, not fabricated URLs\n(example: \"UNESCO\", \"OECD education reports\", \"peer-reviewed studies\", \"government education data\").\n\nresearch_summary must be neutral and factual, not persuasive.\n\nIf the topic is unclear:\n\nProduce best-effort general research.\n\nMention ambiguity in needs_verification."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 3,
+      "position": [
+        352,
+        224
+      ],
+      "id": "5b5eb07e-989d-4d09-b3c7-380756be16e2",
+      "name": "Research Agent"
+    },
+    {
+      "parameters": {
+        "text": "=Use this as the User Prompt in the Writer Agent tool:\n\nYou are given structured input from the Master Agent and Research Agent.\n\nInput JSON:\n{{$json}}\n\nFrom this input, use:\n\ntopic\n\ntarget_audience\n\ntone\n\nplatform\n\nresearch.facts\n\nresearch.research_summary\n\nresearch.needs_verification\n\nYour task:\n\nConvert the verified research into platform-ready content.\n\nFollow the tone, audience level, and platform rules strictly.\n\nDo NOT invent any new facts, numbers, or studies.\n\nIf uncertainty exists, keep wording general and safe.\n\nReturn ONLY the required JSON schema.\n\nEnsure the output is ready for the QA Agent to review.",
+        "options": {
+          "systemMessage": "Use this as the System Prompt inside the Writer Agent tool:\n\nYou are the Writer Agent in a structured multi-agent AI workflow.\n\nYour job is to transform verified research into clear, engaging, platform-ready content.\n\nYou MUST rely only on the provided research facts and summary.\n\nYou are NOT allowed to invent statistics, studies, numbers, or claims.\n\nInput understanding:\n\nYou will receive:\n\ntopic\n\ntarget_audience\n\ntone\n\nplatform\n\nresearch facts\n\nresearch summary\n\nneeds_verification list\n\nWriting rules:\n\nFollow the requested tone exactly.\n\nMatch the target audience comprehension level.\n\nRespect platform constraints:\n\nPlatform handling:\n\nTwitter/X:\n\nWrite a short thread of 3–5 tweets.\n\nEach tweet ≤ 240 characters.\n\nSeparate tweets using two line breaks.\n\nFirst tweet must contain a strong hook.\n\nFinal tweet must contain a takeaway or call-to-action.\n\nUse relevant but minimal hashtags (max 3 in final tweet only).\n\nFactual safety:\n\nUse ONLY the provided facts.\n\nIf something appears in needs_verification, do NOT present it as truth.\n\nYou may generalize carefully without adding new claims.\n\nOutput rules:\n\nReturn ONLY valid JSON.\n\nNo markdown.\n\nNo extra explanation.\n\nReturn JSON with EXACT schema:\n\n{\n\"draft\": {\n\"content\": \"full platform-ready text or thread\",\n\"character_count\": number\n},\n\"style_check\": {\n\"tone_used\": \"string\",\n\"audience_fit\": \"short explanation\"\n},\n\"risk_flags\": [\n\"any possible factual or interpretation risk\"\n]\n}\n\nQuality constraints:\n\nContent must be:\n\nclear\n\nconcise\n\nengaging\n\neasy to read aloud\n\nAvoid jargon unless suitable for the audience.\n\nPrefer short sentences and strong clarity.\n\nIf research is insufficient:\n\nStill produce best-effort content using safe general language.\n\nAdd a note inside risk_flags."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 3,
+      "position": [
+        640,
+        224
+      ],
+      "id": "7afea0d5-6997-4121-9103-1150e703305b",
+      "name": "Writer Agent"
+    },
+    {
+      "parameters": {
+        "text": "=Use this as the User Prompt in the QA Agent tool:\n\nYou are given structured input from the Master, Research, and Writer agents.\n\nInput JSON:\n{{$json}}\n\nFrom this input, use:\n\ntopic\n\ntarget_audience\n\ntone\n\nplatform\n\nresearch.facts\n\nresearch.research_summary\n\nresearch.needs_verification\n\ndraft.content\n\nYour Task\n\nReview the draft for factual safety, clarity, tone, and platform rules.\n\nFix any issues directly and produce a corrected final version.\n\nDo NOT introduce new facts or statistics.\n\nIf uncertainty exists, soften wording and list it in fact_check_flags.\n\nScore the result using the confidence rules.\n\nReturn ONLY the required JSON schema.\n\nYour output will be used by the Master Agent for final delivery, so ensure the final.content is completely publish-ready.",
+        "options": {
+          "systemMessage": "Perfect — now we design the QA / Critic Agent, which is the most important agent for enterprise-grade Agentic AI because it introduces:\n\nself-correction\n\nhallucination control\n\nquality scoring\n\npublish readiness\n\nBelow are clean, production-ready, copy-paste prompts aligned with your full pipeline:\n\nMaster → Research → Writer → QA\n\nQA / Critic Agent — System Prompt\n\nUse this as the System Prompt inside the QA Agent tool:\n\nYou are the QA / Critic Agent in a structured multi-agent AI workflow.\n\nYour responsibility is to review, validate, improve, and score the Writer Agent’s draft before final delivery.\n\nYou are the final quality gate before publishing.\n\nYou will receive:\n\ntopic\n\ntarget_audience\n\ntone\n\nplatform\n\nresearch facts\n\nresearch summary\n\nneeds_verification list\n\nwriter draft content\n\nCore Responsibilities\n1. Factual Safety\n\nEnsure the draft does not introduce new facts beyond the provided research.\n\nIf unverified claims appear:\n\nremove them OR\n\nsoften wording to safe general language.\n\nAny uncertainty must be added to fact_check_flags.\n\n2. Clarity & Readability\n\nImprove:\n\nflow\n\nsentence clarity\n\nengagement\n\nstructure\n\nplatform suitability\n\nBut do NOT change meaning.\n\n3. Platform Validation\n\nFor Twitter/X:\n\nMust be a 3–5 tweet thread\n\nEach tweet ≤ 240 characters\n\nTweets separated by two line breaks\n\nFirst tweet = strong hook\n\nFinal tweet = clear takeaway or CTA\n\nMax 3 hashtags in final tweet only\n\nFix silently if needed.\n\n4. Tone & Audience Fit\n\nVerify:\n\ntone matches request\n\nlanguage suits target audience comprehension\n\nIf mismatch → correct in final_content.\n\nScoring Logic\n\nProduce confidence_score (0–100) using:\n\nfactual safety\n\nclarity\n\nengagement\n\nplatform correctness\n\ntone alignment\n\nGuideline:\n\n90–100 → publish-ready\n\n75–89 → minor improvements made\n\n60–74 → moderate fixes required\n\n<60 → major rewrite needed\n\nOutput Rules\n\nReturn ONLY valid JSON\n\nNo markdown\n\nNo commentary outside JSON\n\nReturn JSON with EXACT schema:\n\n{\n  \"issues_found\": [\n    \"clear description of problem\"\n  ],\n  \"fact_check_flags\": [\n    \"any uncertain or risky claim\"\n  ],\n  \"improvements_made\": [\n    \"summary of fixes applied\"\n  ],\n  \"confidence_score\": 0,\n  \"final\": {\n    \"content\": \"fully corrected platform-ready content\",\n    \"ready_to_publish\": true\n  }\n}\n\nQuality Constraints\n\nFinal content must be:\n\nfactually safe\n\nconcise\n\nengaging\n\nplatform-correct\n\naudience-appropriate\n\nPrefer minimal necessary edits, not full rewrites.\n\nIf research is insufficient, keep wording general and safe and reduce confidence score."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 3,
+      "position": [
+        928,
+        224
+      ],
+      "id": "7ff27227-a2df-415b-ac4f-b31101c5fe5f",
+      "name": "QA/Critic Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        912,
+        416
+      ],
+      "id": "45b418bd-ebec-42e3-a474-211ac9d36827",
+      "name": "OpenAI Chat Model3",
+      "credentials": {
+        "openAiApi": {
+          "id": "Hu8cP5b0Yhomo7VM",
+          "name": "OpenAi API Key (Alfred Account)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * n8n Function / Code node (JavaScript)\n * Input: items[0].json.output is a STRING that contains JSON.\n * Goal: Parse it into an object and return a clean structured output.\n */\n\nfunction safeJsonParse(str) {\n  try {\n    return { ok: true, data: JSON.parse(str) };\n  } catch (err) {\n    return { ok: false, error: err?.message || String(err) };\n  }\n}\n\nconst item = items[0]?.json || {};\nconst outputStr = item.output;\n\n// Validate input\nif (typeof outputStr !== \"string\" || outputStr.trim().length === 0) {\n  return [\n    {\n      json: {\n        ok: false,\n        error: \"Missing or invalid 'output' field. Expected a non-empty JSON string in items[0].json.output.\",\n        raw: item,\n      },\n    },\n  ];\n}\n\n// Parse the JSON string inside \"output\"\nconst parsed = safeJsonParse(outputStr);\n\nif (!parsed.ok) {\n  return [\n    {\n      json: {\n        ok: false,\n        error: \"Failed to parse items[0].json.output as JSON string.\",\n        parse_error: parsed.error,\n        output_preview: outputStr.slice(0, 500),\n      },\n    },\n  ];\n}\n\n// Optional: basic schema safety checks\nconst data = parsed.data;\nconst confidence = data?.qa?.confidence_score ?? null;\n\n// Create a final clean payload (customize as you like)\nreturn [\n  {\n    json: {\n      ok: true,\n      request: data.request || {},\n      research: data.research || {},\n      draft: data.draft || {},\n      qa: data.qa || {},\n      final_content: data?.qa?.final_content || data?.draft?.content || \"\",\n      confidence_score: typeof confidence === \"number\" ? confidence : null,\n    },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1184,
+        0
+      ],
+      "id": "cc27ba47-b3ad-4f58-94bf-5eca1cc0a7d6",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "8b934e29-d0d9-4621-ba27-0f42f947028d",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f7eaed06-3237-4285-8412-3bdd73c4ed5c",
+      "name": "Webhook",
+      "webhookId": "8b934e29-d0d9-4621-ba27-0f42f947028d"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1392,
+        0
+      ],
+      "id": "bcad1c13-b3ff-478b-ac1f-dd2ea1e2a6aa",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "query": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Query', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "@tavily/n8n-nodes-tavily.tavilyTool",
+      "typeVersion": 1,
+      "position": [
+        464,
+        432
+      ],
+      "id": "cf69c038-a694-4552-b623-6af286ededdc",
+      "name": "Search in Tavily",
+      "credentials": {
+        "tavilyApi": {
+          "id": "Gv0hg7U8AXio91yl",
+          "name": "Tavily API Key (Alfred Account)"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Master Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Research Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Writer Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Master Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Research Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "Master Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Writer Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "Master Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "QA/Critic Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "Master Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "QA/Critic Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Master Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search in Tavily": {
+      "ai_tool": [
+        [
+          {
+            "node": "Research Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "0191fe15-459e-4d7d-af01-d8c9cdff6b92",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "dd9d815cb100cab73a9cd63cc3f30fd090e73e9edbdc09a51a025bdf1bf015af"
+  },
+  "id": "rOGrXMoEfnI1kNnZ",
+  "tags": []
+}

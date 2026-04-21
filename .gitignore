@@ -1,0 +1,12 @@
+.DS_Store
+.env
+.env.local
+node_modules/
+.playwright-mcp/
+*.log
+
+# Leftover ui-review screenshots
+01-initial.png
+02-dark.png
+03-zh-dark.png
+04-reload-persist.png

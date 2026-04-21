@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en" data-theme="light" data-lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title data-i18n="page_title">Nike · China Brand Deep Research</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23fa5400'/%3E%3Cpath d='M8 17 l5 5 l11-13' stroke='white' stroke-width='3.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand">
+      <span class="swoosh" aria-hidden="true">✓</span>
+      <div class="brand-text">
+        <h1 data-i18n="brand_title">Nike · China Brand Research</h1>
+        <p class="tagline" data-i18n="brand_sub">Multi-agent deep research · 深度多智能体研究</p>
+      </div>
+    </div>
+    <div class="controls">
+      <button id="theme-toggle" class="icon-btn" type="button" aria-label="Toggle theme">
+        <span class="theme-icon-light">☀</span>
+        <span class="theme-icon-dark">☾</span>
+      </button>
+      <button id="lang-toggle" class="icon-btn lang-btn" type="button" aria-label="Toggle language">
+        <span class="lang-en">EN</span>
+        <span class="lang-zh">中文</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card form-card">
+      <h2 class="card-title" data-i18n="form_title">Start a Research Brief</h2>
+      <p class="card-sub" data-i18n="form_sub">The Research · Writer · QA agents will run in sequence and return a publish-ready brief.</p>
+      <form id="research-form" autocomplete="off">
+        <div class="field">
+          <label for="topic" data-i18n="label_topic">Topic</label>
+          <input id="topic" name="topic" type="text" required
+                 data-i18n-placeholder="placeholder_topic"
+                 placeholder="e.g. Air Jordan 1 relaunch for Lunar New Year" />
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label for="target_audience" data-i18n="label_audience">Target audience</label>
+            <input id="target_audience" name="target_audience" type="text" />
+          </div>
+          <div class="field">
+            <label for="tone" data-i18n="label_tone">Tone</label>
+            <input id="tone" name="tone" type="text" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="platform" data-i18n="label_platform">Platform</label>
+          <input id="platform" name="platform" type="text" />
+        </div>
+        <div class="actions">
+          <button id="submit-btn" type="submit" class="primary-btn">
+            <span data-i18n="btn_run">Run Deep Research</span>
+          </button>
+          <button id="cancel-btn" type="button" class="ghost-btn hidden" data-i18n="btn_cancel">Cancel</button>
+        </div>
+      </form>
+    </section>
+
+    <section id="status-card" class="card status-card hidden" aria-live="polite">
+      <div class="pipeline">
+        <div class="pipeline-step" data-step="research">
+          <span class="dot"></span>
+          <span data-i18n="step_research">Research</span>
+        </div>
+        <span class="arrow">→</span>
+        <div class="pipeline-step" data-step="writer">
+          <span class="dot"></span>
+          <span data-i18n="step_writer">Writer</span>
+        </div>
+        <span class="arrow">→</span>
+        <div class="pipeline-step" data-step="qa">
+          <span class="dot"></span>
+          <span data-i18n="step_qa">QA / Critic</span>
+        </div>
+      </div>
+      <div class="status-meta">
+        <span data-i18n="status_running">Agents working…</span>
+        <span class="elapsed"><span id="elapsed-time">0</span>s</span>
+      </div>
+    </section>
+
+    <section id="error-card" class="card error-card hidden" aria-live="assertive">
+      <div class="error-head">
+        <strong data-i18n="error_title">Request failed</strong>
+        <button id="retry-btn" type="button" class="ghost-btn" data-i18n="btn_retry">Retry</button>
+      </div>
+      <p id="error-msg"></p>
+    </section>
+
+    <section id="report" class="report hidden">
+      <div class="report-actions">
+        <button id="copy-md-btn" class="ghost-btn" type="button" data-i18n="btn_copy_md">Copy as Markdown</button>
+        <button id="download-md-btn" class="ghost-btn" type="button" data-i18n="btn_download_md">Download .md</button>
+        <span id="copy-feedback" class="copy-feedback"></span>
+      </div>
+
+      <article class="card">
+        <header class="section-head">
+          <h2><span class="sec-icon">🔎</span> <span data-i18n="sec_research">Research</span></h2>
+        </header>
+        <div id="research-summary" class="prose"></div>
+        <h3 data-i18n="sub_facts">Facts</h3>
+        <ul id="research-facts"></ul>
+        <h3 data-i18n="sub_sources">Sources</h3>
+        <ul id="research-sources"></ul>
+        <h3 data-i18n="sub_needs_verification">Needs verification</h3>
+        <ul id="research-needs"></ul>
+      </article>
+
+      <article class="card">
+        <header class="section-head">
+          <h2><span class="sec-icon">✍️</span> <span data-i18n="sec_draft">Writer draft</span></h2>
+          <span class="muted"><span data-i18n="draft_chars">Characters</span>: <span id="draft-chars">0</span></span>
+        </header>
+        <div id="draft-content" class="prose"></div>
+        <h3 data-i18n="sub_risk_flags">Risk flags</h3>
+        <ul id="draft-risk"></ul>
+      </article>
+
+      <article class="card">
+        <header class="section-head">
+          <h2><span class="sec-icon">✅</span> <span data-i18n="sec_qa">QA / Critic</span></h2>
+          <span id="confidence-badge" class="badge">—</span>
+        </header>
+        <h3 data-i18n="sub_issues">Issues found</h3>
+        <ul id="qa-issues"></ul>
+        <h3 data-i18n="sub_fact_flags">Fact-check flags</h3>
+        <ul id="qa-factflags"></ul>
+        <h3 data-i18n="sub_improvements">Improvements made</h3>
+        <ul id="qa-improvements"></ul>
+      </article>
+
+      <article class="card final-card">
+        <header class="section-head">
+          <h2><span class="sec-icon">📄</span> <span data-i18n="sec_final">Final content</span></h2>
+        </header>
+        <div id="final-content" class="prose"></div>
+      </article>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span data-i18n="footer">Powered by n8n multi-agent pipeline · Research → Writer → QA</span>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked@14.1.3/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+  <script src="i18n.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
